@@ -9,5 +9,5 @@ import java.io.OutputStream
  * {@link #createBackup(Context)} method.
  */
 interface IBackupCreator {
-    fun writeBackup(context: Context, outputStream: OutputStream) : Boolean
+  fun writeBackup(context: Context, outputStream: OutputStream) : Boolean
 }

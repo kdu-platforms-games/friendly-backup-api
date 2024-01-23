@@ -10,92 +10,92 @@ import java.lang.RuntimeException
 
 object FileUtil {
 
-    @JvmStatic
-    fun writePath(writer: JsonWriter, path: File, recursive : Boolean = false) {
-        writer.beginArray()
-        val files = path.listFiles() ?: emptyArray()
+  @JvmStatic
+  fun writePath(writer: JsonWriter, path: File, recursive : Boolean = false) {
+    writer.beginArray()
+    val files = path.listFiles() ?: emptyArray()
 
-        for(file in files) {
-            if(!file.isDirectory || recursive) {
-                writeFile(writer, file, recursive)
-            }
-        }
-
-        writer.endArray()
+    for(file in files) {
+      if(!file.isDirectory || recursive) {
+        writeFile(writer, file, recursive)
+      }
     }
 
-    @JvmStatic
-    fun writeFile(writer: JsonWriter, file: File, recursive : Boolean = false) {
-        writer.beginObject()
-        writer.name("name").value(file.name)
-        writer.name("path").value(file.path)
-        writer.name("type")
+    writer.endArray()
+  }
 
-        if(file.isFile) {
-            writer.value("file")
-            writer.name("content")
-            file.inputStream().use {
-                writer.value(it.readBytes().toBase64())
-            }
-        } else if(file.isDirectory) {
-            writer.value("directory")
-            writer.name("children")
-            writePath(writer, file, recursive)
-        }
+  @JvmStatic
+  fun writeFile(writer: JsonWriter, file: File, recursive : Boolean = false) {
+    writer.beginObject()
+    writer.name("name").value(file.name)
+    writer.name("path").value(file.path)
+    writer.name("type")
 
-        writer.endObject()
+    if(file.isFile) {
+      writer.value("file")
+      writer.name("content")
+      file.inputStream().use {
+        writer.value(it.readBytes().toBase64())
+      }
+    } else if(file.isDirectory) {
+      writer.value("directory")
+      writer.name("children")
+      writePath(writer, file, recursive)
     }
 
-    @JvmStatic
-    fun readFile(reader: JsonReader, path: File) {
-        reader.beginObject()
+    writer.endObject()
+  }
 
-        var file : File = path
-        var type : String? = null
-        var content : String? = null
+  @JvmStatic
+  fun readFile(reader: JsonReader, path: File) {
+    reader.beginObject()
 
-        while(reader.hasNext()) {
-            val name = reader.nextName()
+    var file : File = path
+    var type : String? = null
+    var content : String? = null
 
-            // "name" must come before "children" for this to work
-            when(name) {
-                "name" -> file = File(path, reader.nextString())
-                "path" -> reader.skipValue()
-                "type" -> type = reader.nextString()
-                "children" -> readPath(reader, file)
-                "content" -> content = reader.nextString()
-                else -> throw RuntimeException("Can not parse name $name")
-            }
-        }
+    while(reader.hasNext()) {
+      val name = reader.nextName()
 
-        if(type == "file") {
-            content?.fromBase64()?.inputStream()?.let {
-                if(file != path) {
-                    path.mkdirs()
-                    file.copyInputStreamToFile(it)
-                }
-            }
-        }
-
-        reader.endObject()
+      // "name" must come before "children" for this to work
+      when(name) {
+        "name" -> file = File(path, reader.nextString())
+        "path" -> reader.skipValue()
+        "type" -> type = reader.nextString()
+        "children" -> readPath(reader, file)
+        "content" -> content = reader.nextString()
+        else -> throw RuntimeException("Can not parse name $name")
+      }
     }
 
-    @JvmStatic
-    fun readPath(reader: JsonReader, path: File) {
-        reader.beginArray()
-
-        while(reader.hasNext()) {
-            readFile(reader, path)
+    if(type == "file") {
+      content?.fromBase64()?.inputStream()?.let {
+        if(file != path) {
+          path.mkdirs()
+          file.copyInputStreamToFile(it)
         }
-
-        reader.endArray()
+      }
     }
 
-    @JvmStatic
-    fun copyFile(inputFile: File, outputFile: File) {
-        inputFile.inputStream().use {
-            outputFile.copyInputStreamToFile(it)
-        }
+    reader.endObject()
+  }
+
+  @JvmStatic
+  fun readPath(reader: JsonReader, path: File) {
+    reader.beginArray()
+
+    while(reader.hasNext()) {
+      readFile(reader, path)
     }
+
+    reader.endArray()
+  }
+
+  @JvmStatic
+  fun copyFile(inputFile: File, outputFile: File) {
+    inputFile.inputStream().use {
+      outputFile.copyInputStreamToFile(it)
+    }
+  }
 
 }

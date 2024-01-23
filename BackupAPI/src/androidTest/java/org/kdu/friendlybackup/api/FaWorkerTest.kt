@@ -29,67 +29,67 @@ import java.io.OutputStream
  */
 @RunWith(AndroidJUnit4::class)
 class FaWorkerTest {
-    val packageName = "org.kdu.friendlybackup.api"
-    val appContext = InstrumentationRegistry.getInstrumentation().targetContext
-    lateinit var workManager: WorkManager
+  val packageName = "org.kdu.friendlybackup.api"
+  val appContext = InstrumentationRegistry.getInstrumentation().targetContext
+  lateinit var workManager: WorkManager
 
-    @Before
-    fun setUp() {
-        val config = Configuration.Builder().setExecutor(SynchronousExecutor())
-            .setMinimumLoggingLevel(Log.DEBUG).build()
-        WorkManagerTestInitHelper.initializeTestWorkManager(appContext, config)
-        workManager = WorkManager.getInstance(appContext)
+  @Before
+  fun setUp() {
+    val config = Configuration.Builder().setExecutor(SynchronousExecutor())
+      .setMinimumLoggingLevel(Log.DEBUG).build()
+    WorkManagerTestInitHelper.initializeTestWorkManager(appContext, config)
+    workManager = WorkManager.getInstance(appContext)
 
-        BackupManager.backupRestorer = object : IBackupRestorer {
-            override fun restoreBackup(context: Context, restoreData: InputStream): Boolean {
-                Thread.sleep(1000)
-                Log.d("BACKUP CREATOR", "createBackup called.")
-                return true
-            }
-        }
-
-        BackupManager.backupCreator = object : IBackupCreator {
-            override fun writeBackup(context: Context, outputStream: OutputStream): Boolean {
-                Thread.sleep(1000)
-                Log.d("BACKUP RESTORER", "restoreBackup called.")
-                outputStream.write("{ 'test': [] }".toByteArray())
-                return true
-            }
-        }
+    BackupManager.backupRestorer = object : IBackupRestorer {
+      override fun restoreBackup(context: Context, restoreData: InputStream): Boolean {
+        Thread.sleep(1000)
+        Log.d("BACKUP CREATOR", "createBackup called.")
+        return true
+      }
     }
 
-    @Test
-    fun testCreateBackupWorker() {
-        //val constraints: Constraints =
-        //val worker = OneTimeWorkRequestBuilder<CreateBackupWorker>().build()
-        //workManager.enqueue(worker)
+    BackupManager.backupCreator = object : IBackupCreator {
+      override fun writeBackup(context: Context, outputStream: OutputStream): Boolean {
+        Thread.sleep(1000)
+        Log.d("BACKUP RESTORER", "restoreBackup called.")
+        outputStream.write("{ 'test': [] }".toByteArray())
+        return true
+      }
+    }
+  }
 
-        // driver = WorkManagerTestInitHelper.getTestDriver(context)
-        // driver.setAllConstraintsMet(worker.id)
-        //val workInfo = workManager.getWorkInfoById(worker.id).get()
-        //assertEquals(WorkInfo.State.SUCCEEDED, workInfo.state)
+  @Test
+  fun testCreateBackupWorker() {
+    //val constraints: Constraints =
+    //val worker = OneTimeWorkRequestBuilder<CreateBackupWorker>().build()
+    //workManager.enqueue(worker)
+
+    // driver = WorkManagerTestInitHelper.getTestDriver(context)
+    // driver.setAllConstraintsMet(worker.id)
+    //val workInfo = workManager.getWorkInfoById(worker.id).get()
+    //assertEquals(WorkInfo.State.SUCCEEDED, workInfo.state)
 
 //        val worker = OneTimeWorkRequestBuilder<CreateBackupWorker>().build()
 //        workManager.enqueue(worker)
 //        val info = workManager.getWorkInfoById(worker.id).get()
 //        assertEquals(WorkInfo.State.SUCCEEDED, info.state)
-        assertEquals(WorkInfo.State.SUCCEEDED, runWorker<CreateBackupWorker>().state)
-    }
+    assertEquals(WorkInfo.State.SUCCEEDED, runWorker<CreateBackupWorker>().state)
+  }
 
-    @Test
-    fun testRestoreBackupWorker() {
-        BackupDataStore.saveRestoreData(appContext, "{ 'test': [] }".byteInputStream())
-        assertEquals(WorkInfo.State.SUCCEEDED, runWorker<RestoreBackupWorker>().state)
-    }
+  @Test
+  fun testRestoreBackupWorker() {
+    BackupDataStore.saveRestoreData(appContext, "{ 'test': [] }".byteInputStream())
+    assertEquals(WorkInfo.State.SUCCEEDED, runWorker<RestoreBackupWorker>().state)
+  }
 
-    @Test
-    fun testRestoreBackupWorkerWithoutRestoreData() {
-        assertEquals(WorkInfo.State.FAILED, runWorker<RestoreBackupWorker>().state)
-    }
+  @Test
+  fun testRestoreBackupWorkerWithoutRestoreData() {
+    assertEquals(WorkInfo.State.FAILED, runWorker<RestoreBackupWorker>().state)
+  }
 
-    inline fun <reified T : Worker> runWorker(): WorkInfo {
-        val worker = OneTimeWorkRequestBuilder<T>().build()
-        workManager.enqueue(worker)
-        return workManager.getWorkInfoById(worker.id).get()
-    }
+  inline fun <reified T : Worker> runWorker(): WorkInfo {
+    val worker = OneTimeWorkRequestBuilder<T>().build()
+    workManager.enqueue(worker)
+    return workManager.getWorkInfoById(worker.id).get()
+  }
 }

@@ -9,21 +9,21 @@ import org.kdu.friendlybackup.api.friendly.BackupManager
 
 class RestoreBackupWorker(val context : Context, params: WorkerParameters) : Worker(context, params) {
 
-    override fun doWork(): Result {
-        val restoreData = BackupDataStore.getRestoreData(context) ?: return Result.failure()
-        val backupRestorer = BackupManager.backupRestorer ?: return Result.failure()
+  override fun doWork(): Result {
+    val restoreData = BackupDataStore.getRestoreData(context) ?: return Result.failure()
+    val backupRestorer = BackupManager.backupRestorer ?: return Result.failure()
 
-        val success = backupRestorer.restoreBackup(context, restoreData)
+    val success = backupRestorer.restoreBackup(context, restoreData)
 
-        if(!success) {
-            return Result.failure()
-        }
-
-        // clean backup and restore data
-        BackupDataStore.cleanRestoreData(context)
-        BackupDataStore.cleanBackupDataIfNoRestoreData(context)
-
-        return Result.success(Data.EMPTY)
+    if(!success) {
+      return Result.failure()
     }
+
+    // clean backup and restore data
+    BackupDataStore.cleanRestoreData(context)
+    BackupDataStore.cleanBackupDataIfNoRestoreData(context)
+
+    return Result.success(Data.EMPTY)
+  }
 
 }

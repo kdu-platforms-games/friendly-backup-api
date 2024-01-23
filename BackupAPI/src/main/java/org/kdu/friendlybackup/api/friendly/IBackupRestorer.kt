@@ -9,5 +9,5 @@ import java.io.InputStream
  * {@link #restoreBackup(Context, String)} method.
  */
 interface IBackupRestorer {
-    fun restoreBackup(context: Context, restoreData: InputStream) : Boolean
+  fun restoreBackup(context: Context, restoreData: InputStream) : Boolean
 }

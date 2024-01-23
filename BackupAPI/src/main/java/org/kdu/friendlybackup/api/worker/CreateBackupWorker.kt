@@ -13,27 +13,27 @@ import java.io.ByteArrayOutputStream
 
 class CreateBackupWorker(val context : Context, params: WorkerParameters) : Worker(context, params) {
 
-    override fun doWork(): Result {
-        Log.d("FA BackupWorker", "doWork()")
-        //if(BackupDataStore.isBackupDataSaved(context)) return Result.success()
+  override fun doWork(): Result {
+    Log.d("FA BackupWorker", "doWork()")
+    //if(BackupDataStore.isBackupDataSaved(context)) return Result.success()
 
-        Log.d("FA BackupWorker", "creating backup...")
-        val outStream = ByteArrayOutputStream()
-        val success = BackupManager.backupCreator?.writeBackup(context, outStream) ?: return Result.success(Data.Builder().apply {
-            putInt(CommonApiConstants.RESULT_CODE, CommonApiConstants.RESULT_CODE_ERROR)
-        }.build())
+    Log.d("FA BackupWorker", "creating backup...")
+    val outStream = ByteArrayOutputStream()
+    val success = BackupManager.backupCreator?.writeBackup(context, outStream) ?: return Result.success(Data.Builder().apply {
+      putInt(CommonApiConstants.RESULT_CODE, CommonApiConstants.RESULT_CODE_ERROR)
+    }.build())
 
-        if(!success) {
-            return Result.success(Data.Builder().apply {
-                putInt(CommonApiConstants.RESULT_CODE, CommonApiConstants.RESULT_CODE_ERROR)
-            }.build())
-        }
-        Log.d("FA BackupWorker", "backup created")
-        outStream.close()
-
-        BackupDataStore.saveBackupData(context, ByteArrayInputStream(outStream.toByteArray()))
-
-        return Result.success(Data.EMPTY)
+    if(!success) {
+      return Result.success(Data.Builder().apply {
+        putInt(CommonApiConstants.RESULT_CODE, CommonApiConstants.RESULT_CODE_ERROR)
+      }.build())
     }
+    Log.d("FA BackupWorker", "backup created")
+    outStream.close()
+
+    BackupDataStore.saveBackupData(context, ByteArrayInputStream(outStream.toByteArray()))
+
+    return Result.success(Data.EMPTY)
+  }
 
 }
